@@ -1,0 +1,98 @@
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "mbedtls/config.h"
+#else
+#include MBEDTLS_CONFIG_FILE
+#endif
+
+#if !defined(MBEDTLS_ENTROPY_C) || \
+    !defined(MBEDTLS_SSL_TLS_C) || !defined(MBEDTLS_SSL_CLI_C) || \
+    !defined(MBEDTLS_NET_C) || !defined(MBEDTLS_CTR_DRBG_C)
+int main( void )
+{
+    mbedtls_printf("MBEDTLS_ENTROPY_C and/or "
+           "MBEDTLS_SSL_TLS_C and/or MBEDTLS_SSL_CLI_C and/or "
+           "MBEDTLS_NET_C and/or MBEDTLS_CTR_DRBG_C and/or not defined.\n");
+    return( 0 );
+}
+#else
+
+#include "SslClient.h"
+#include <iostream>
+
+
+int main( int argc, char *argv[] )
+{
+    int ret;
+
+    
+#if defined(MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED)
+    unsigned char psk[MBEDTLS_PSK_MAX_LEN];
+    size_t psk_len = 0;
+#endif
+#if defined(MBEDTLS_SSL_ALPN)
+    const char *alpn_list[10];
+#endif
+
+
+   
+#if defined(MBEDTLS_SSL_ALPN)
+    memset( (void * ) alpn_list, 0, sizeof( alpn_list ) );
+#endif
+
+
+    Options opt;
+    if(opt.HandleCliArgs(argc, argv))
+        return 0;
+    
+
+#if defined(MBEDTLS_DEBUG_C)
+    mbedtls_debug_set_threshold( opt.debug_level );
+#endif
+
+    if(opt.IsCiphersuiteForced())
+        ret = opt.HandleCiphersuiteRequest();
+
+    if(opt.IsPSKEnabled())
+        opt.UnhexifyPSK(psk, psk_len);
+
+
+
+#if defined(MBEDTLS_SSL_ALPN)
+    opt.SslAlpn(alpn_list);
+#endif /* MBEDTLS_SSL_ALPN */
+
+try{
+    SslClient cl;
+    cl.InitRng();
+    cl.LoadTrustedCerts(opt);
+    cl.LoadClientKeys(opt);
+    cl.StartConnection(opt);
+    cl.SetupStuff(opt, alpn_list, psk, psk_len);
+    cl.PerformHandshake(opt);
+    cl.VerifyServerCert(opt);
+    cl.SendGet(opt);
+    cl.ReadResponse(opt);
+    cl.ReuseConnection(opt);
+    cl.CloseConnection();
+    cl.Reconnect(opt);
+}
+
+catch(...){
+    std::cout<<"Exit\n\n";
+}
+
+  
+#if defined(_WIN32)
+    mbedtls_printf( "  + Press Enter to exit this program.\n" );
+    fflush( stdout ); getchar();
+#endif
+
+    // Shell can not handle large exit numbers -> 1 for errors
+    if( ret < 0 )
+        ret = 1;
+
+    return( ret );
+}
+#endif /* MBEDTLS_BIGNUM_C && MBEDTLS_ENTROPY_C && MBEDTLS_SSL_TLS_C &&
+          MBEDTLS_SSL_CLI_C && MBEDTLS_NET_C && MBEDTLS_RSA_C &&
+          MBEDTLS_CTR_DRBG_C MBEDTLS_TIMING_C */
