@@ -4,46 +4,46 @@ static bool int_print_usage(int ret);
 
 Options::Options()
 {
-	this->server_name         = SERVER_NAME;
-    this->server_addr         = SERVER_ADDR;
-    this->server_port         = SERVER_PORT;
-    this->debug_level         = DEBUG_LEVEL;
-    this->nbio                = NBIO;
-    this->read_timeout        = READ_TIMEOUT;
-    this->max_resend          = MAX_RESEND;
-    this->request_page        = REQUEST_PAGE;
-    this->request_size        = REQUEST_SIZE;
-    this->ca_file             = CA_FILE;
-    this->ca_path             = CA_PATH;
-    this->crt_file            = CRT_FILE;
-    this->key_file            = KEY_FILE;
-    this->psk                 = PSK;
-    this->psk_identity        = PSK_IDENTITY;
-    this->ecjpake_pw          = ECJPAKE_PW;
-    this->force_ciphersuite[0]= FORCE_CIPHER;
-    this->renegotiation       = RENEGOTIATION;	
-    this->allow_legacy        = ALLOW_LEGACY;
-    this->renegotiate         = RENEGOTIATE;
-    this->exchanges           = EXCHANGES;
-    this->min_version         = MIN_VERSION;
-    this->max_version         = MAX_VERSION;
-    this->arc4                = ARC4;
-    this->auth_mode           = AUTH_MODE;
-    this->mfl_code            = MFL_CODE;
-    this->trunc_hmac          = TRUNC_HMAC;
-    this->recsplit            = RECSPLIT;
-    this->dhmlen              = DHMLEN;
-    this->reconnect           = RECONNECT;
-    this->reco_delay          = RECO_DELAY;
-    this->reconnect_hard      = RECONNECT_HARD;
-    this->tickets             = TICKETS;
-    this->alpn_string         = ALPN_STRING;
-    this->transport           = TRANSPORT;
-    this->hs_to_min           = HS_TO_MIN;
-    this->hs_to_max           = HS_TO_MAX;
-    this->fallback            = FALLBACK;
-    this->extended_ms         = EXTENDED_MS;
-    this->etm                 = ETM;
+  this->server_name         = "localhost";
+    this->server_addr         = NULL;
+    this->server_port         = "443";
+    this->debug_level         = Constants::DEBUG_LEVEL;
+    this->nbio                = Constants::NBIO;
+    this->read_timeout        = Constants::READ_TIMEOUT;
+    this->max_resend          = Constants::MAX_RESEND;
+    this->request_page        = "/";
+    this->request_size        = Constants::REQUEST_SIZE;
+    this->ca_file             = "";
+    this->ca_path             = "";
+    this->crt_file            = "";
+    this->key_file            = "";
+    this->psk                 = "";
+    this->psk_identity        = "Client_identity";
+    this->ecjpake_pw          = NULL;
+    this->force_ciphersuite[0]= Constants::FORCE_CIPHER;
+    this->renegotiation       = Constants::RENEGOTIATION;	
+    this->allow_legacy        = Constants::ALLOW_LEGACY;
+    this->renegotiate         = Constants::RENEGOTIATE;
+    this->exchanges           = Constants::EXCHANGES;
+    this->min_version         = Constants::MIN_VERSION;
+    this->max_version         = Constants::MAX_VERSION;
+    this->arc4                = Constants::ARC4;
+    this->auth_mode           = Constants::AUTH_MODE;
+    this->mfl_code            = Constants::MFL_CODE;
+    this->trunc_hmac          = Constants::TRUNC_HMAC;
+    this->recsplit            = Constants::RECSPLIT;
+    this->dhmlen              = Constants::DHMLEN;
+    this->reconnect           = Constants::RECONNECT;
+    this->reco_delay          = Constants::RECO_DELAY;
+    this->reconnect_hard      = Constants::RECONNECT_HARD;
+    this->tickets             = Constants::TICKETS;
+    this->alpn_string         = NULL;
+    this->transport           = Constants::TRANSPORT;
+    this->hs_to_min           = Constants::HS_TO_MIN;
+    this->hs_to_max           = Constants::HS_TO_MAX;
+    this->fallback            = Constants::FALLBACK;
+    this->extended_ms         = Constants::EXTENDED_MS;
+    this->etm                 = Constants::ETM;
 }
 
 bool Options::HandleCliArgs(int argc, char** argv)
@@ -52,19 +52,25 @@ bool Options::HandleCliArgs(int argc, char** argv)
 	char *p = NULL;
 	char *q = NULL;
 	int ret;
-
+	for(int x = 0; x<argc;x++)
+	  mbedtls_printf("%s", argv[x]);
 
     if( argc == 0 )
     {
-    	return int_print_usage(ret);
+    	int_print_usage(ret);
+	throw 1;
     }
 
-	for( i = 1; i < argc; i++ )
+    for( i = 1; i < argc; i++ )
     {
         p = argv[i];
-        if( ( q = strchr( p, '=' ) ) == NULL )
-            return int_print_usage(ret);
-        *q++ = '\0';
+        mbedtls_printf("%s", p);
+	if( ( q = strchr( p, '=' ) ) == NULL )
+	  {
+            int_print_usage(ret);
+	    throw 1;
+	  }
+	*q++ = '\0';
 
         if( strcmp( p, "server_name" ) == 0 )
             this->server_name = q;
@@ -80,7 +86,10 @@ bool Options::HandleCliArgs(int argc, char** argv)
             else if( t == 1 )
                 this->transport = MBEDTLS_SSL_TRANSPORT_DATAGRAM;
             else
-                return int_print_usage(ret);
+	      {
+                int_print_usage(ret);
+		throw 1;
+	      }
         }
         else if( strcmp( p, "debug_level" ) == 0 )
         {
@@ -351,6 +360,7 @@ bool Options::HandleCliArgs(int argc, char** argv)
         else
             return int_print_usage(ret);
     }
+    return true;
 }
 
 static bool int_print_usage(int ret)
@@ -372,6 +382,7 @@ static bool int_print_usage(int ret)
         list++;
     }
     mbedtls_printf("\n");
+    throw 1;
     return true;
 }
 
@@ -435,7 +446,7 @@ int Options::HandleCiphersuiteRequest()
 
 bool Options::IsPSKEnabled()
 {
-    return this->psk != "";
+  return strcmp(this->psk, "");
 }
 
 void Options::UnhexifyPSK(unsigned char *psk, size_t psk_len)

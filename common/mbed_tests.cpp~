@@ -18,8 +18,8 @@ int main( void )
 }
 #else
 
-#include "common/Usage.c"
-#include "common/SslClient.h"
+#include "Usage.c"
+#include "SslClient.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,12 +43,10 @@ int main( int argc, char *argv[] )
 #if defined(MBEDTLS_SSL_ALPN)
     memset( (void * ) alpn_list, 0, sizeof( alpn_list ) );
 #endif
-    Options opt;
 
-    for(int i = 0; i<argc; ++i)
-      std::cout<<argv[i]<<std::endl;
     if(opt.HandleCliArgs(argc, argv))
         return 0;
+    Options opt;
     
 #if defined(MBEDTLS_DEBUG_C)
     mbedtls_debug_set_threshold( opt.debug_level );
@@ -80,8 +78,8 @@ try{
     cl.Reconnect(opt);
 }
 
- catch(MbedException e){
-   e.what();
+catch(...){
+    std::cout<<"Exit\n\n";
 }
 
   

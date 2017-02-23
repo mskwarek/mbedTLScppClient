@@ -9,6 +9,7 @@
 #include "mbedtls/timing.h"
 
 #include "DefaultConfig.h"
+#include "MbedException.cpp"
 
 class SslClient
 {
@@ -27,13 +28,15 @@ public:
 	void ReuseConnection(Options);
 	void CloseConnection();
 	void Reconnect(Options);
+ 	unsigned char buf[MBEDTLS_SSL_MAX_CONTENT_LEN + 1];	
+	mbedtls_ssl_context ssl;
+	int retry_left;
 
 private:
- 	const char *pers = "ssl_client2";
+	const char *pers = "ssl_client2";
     mbedtls_net_context server_fd;
     mbedtls_entropy_context entropy;
     mbedtls_ctr_drbg_context ctr_drbg;
-    mbedtls_ssl_context ssl;
     mbedtls_ssl_config conf;
     mbedtls_ssl_session saved_session;
 #if defined(MBEDTLS_TIMING_C)
@@ -46,7 +49,5 @@ private:
     mbedtls_pk_context pkey;
 #endif
     int ret;
- 	unsigned char buf[MBEDTLS_SSL_MAX_CONTENT_LEN + 1];	
- 	int retry_left;
 	
 };

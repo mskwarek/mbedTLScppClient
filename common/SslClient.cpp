@@ -5,9 +5,12 @@ static int my_recv( void *ctx, unsigned char *buf, size_t len );
 static int my_send( void *ctx, const unsigned char *buf, size_t len );
 static int my_verify( void *data, mbedtls_x509_crt *crt, int depth, uint32_t *flags );
 
+void IntReadResponseFromStream(SslClient* cl, Options opt);
+void IntReadResponseFromDatagram(SslClient* cl, Options opt);
+
 SslClient::SslClient()
 {
-	 /*
+    /*
      * Make sure memory references are valid.
      */
     mbedtls_net_init( &server_fd );
@@ -20,7 +23,6 @@ SslClient::SslClient()
     mbedtls_x509_crt_init( &clicert );
     mbedtls_pk_init( &pkey );
 #endif
-    int ret = 0;
 }
 
 void SslClient::InitRng()
@@ -38,7 +40,7 @@ void SslClient::InitRng()
                                strlen( pers ) ) ) != 0 )
     {
         mbedtls_printf( " failed\n  ! mbedtls_ctr_drbg_seed returned -0x%x\n", -ret );
-        throw 1;
+        throw MbedException("mbedtls_ctr_drbg_seed returned 0x", -ret);
     }
 
     mbedtls_printf( " ok\n" );
@@ -85,7 +87,7 @@ void SslClient::LoadTrustedCerts(Options opt)
     if( ret < 0 )
     {
         mbedtls_printf( " failed\n  !  mbedtls_x509_crt_parse returned -0x%x\n\n", -ret );
-        throw 1;
+        throw MbedException("mbedtls_x509_crt_parse returned 0x", -ret);
     }
 
     mbedtls_printf( " ok (%d skipped)\n", ret );
@@ -122,7 +124,7 @@ void SslClient::LoadClientKeys(Options opt)
     if( ret != 0 )
     {
         mbedtls_printf( " failed\n  !  mbedtls_x509_crt_parse returned -0x%x\n\n", -ret );
-        throw 1;
+        throw MbedException("mbedtls_x509_crt_parse returned -0x", -ret);
     }
 
 #if defined(MBEDTLS_FS_IO)
@@ -145,7 +147,7 @@ void SslClient::LoadClientKeys(Options opt)
     if( ret != 0 )
     {
         mbedtls_printf( " failed\n  !  mbedtls_pk_parse_key returned -0x%x\n\n", -ret );
-        throw 1;
+        throw MbedException("mbedtls_pk_parse_key returned -0x", -ret);
     }
 
     mbedtls_printf( " ok\n" );
@@ -170,7 +172,7 @@ void SslClient::StartConnection(Options opt)
                              MBEDTLS_NET_PROTO_TCP : MBEDTLS_NET_PROTO_UDP ) ) != 0 )
     {
         mbedtls_printf( " failed\n  ! mbedtls_net_connect returned -0x%x\n\n", -ret );
-        throw 1;
+        throw MbedException("mbedtls_net_connect returned -0x", -ret);
     }
 
     if( opt.nbio > 0 )
@@ -180,7 +182,7 @@ void SslClient::StartConnection(Options opt)
     if( ret != 0 )
     {
         mbedtls_printf( " failed\n  ! net_set_(non)block() returned -0x%x\n\n", -ret );
-        throw 1;
+        throw MbedException("net_set_(non)block() returned -0x", -ret);
     }
 
     mbedtls_printf( " ok\n" );
@@ -188,7 +190,7 @@ void SslClient::StartConnection(Options opt)
 
 void SslClient::SetupStuff(Options opt, const char** alpn_list, unsigned char* psk, size_t psk_len)
 {
-	 /*
+    /*
      * 3. Setup stuff
      */
     mbedtls_printf( "  . Setting up the SSL/TLS structure..." );
@@ -200,7 +202,7 @@ void SslClient::SetupStuff(Options opt, const char** alpn_list, unsigned char* p
                     MBEDTLS_SSL_PRESET_DEFAULT ) ) != 0 )
     {
         mbedtls_printf( " failed\n  ! mbedtls_ssl_config_defaults returned -0x%x\n\n", -ret );
-        throw 1;
+        throw MbedException("mbedtls_ssl_config_defaults returned -0x", -ret);
     }
 
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
@@ -208,11 +210,11 @@ void SslClient::SetupStuff(Options opt, const char** alpn_list, unsigned char* p
         mbedtls_ssl_conf_verify( &conf, my_verify, NULL );
 #endif
 
-    if( opt.auth_mode != AUTH_MODE )
+    if( opt.auth_mode != Constants::AUTH_MODE )
         mbedtls_ssl_conf_authmode( &conf, opt.auth_mode );
 
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
-    if( opt.hs_to_min != HS_TO_MIN || opt.hs_to_max != HS_TO_MAX )
+    if( opt.hs_to_min != Constants::HS_TO_MIN || opt.hs_to_max != Constants::HS_TO_MAX )
         mbedtls_ssl_conf_handshake_timeout( &conf, opt.hs_to_min, opt.hs_to_max );
 #endif /* MBEDTLS_SSL_PROTO_DTLS */
 
@@ -220,34 +222,34 @@ void SslClient::SetupStuff(Options opt, const char** alpn_list, unsigned char* p
     if( ( ret = mbedtls_ssl_conf_max_frag_len( &conf, opt.mfl_code ) ) != 0 )
     {
         mbedtls_printf( " failed\n  ! mbedtls_ssl_conf_max_frag_len returned %d\n\n", ret );
-        throw 1;
+        throw MbedException("mbedtls_ssl_conf_max_frag_len returned ", ret);
     }
 #endif
 
 #if defined(MBEDTLS_SSL_TRUNCATED_HMAC)
-    if( opt.trunc_hmac != TRUNC_HMAC )
+    if( opt.trunc_hmac != Constants::TRUNC_HMAC )
         mbedtls_ssl_conf_truncated_hmac( &conf, opt.trunc_hmac );
 #endif
 
 #if defined(MBEDTLS_SSL_EXTENDED_MASTER_SECRET)
-    if( opt.extended_ms != EXTENDED_MS )
+    if( opt.extended_ms != Constants::EXTENDED_MS )
         mbedtls_ssl_conf_extended_master_secret( &conf, opt.extended_ms );
 #endif
 
 #if defined(MBEDTLS_SSL_ENCRYPT_THEN_MAC)
-    if( opt.etm != ETM )
+    if( opt.etm != Constants::ETM )
         mbedtls_ssl_conf_encrypt_then_mac( &conf, opt.etm );
 #endif
 
 #if defined(MBEDTLS_SSL_CBC_RECORD_SPLITTING)
-    if( opt.recsplit != RECSPLIT )
+    if( opt.recsplit != Constants::RECSPLIT )
         mbedtls_ssl_conf_cbc_record_splitting( &conf, opt.recsplit
                                     ? MBEDTLS_SSL_CBC_RECORD_SPLITTING_ENABLED
                                     : MBEDTLS_SSL_CBC_RECORD_SPLITTING_DISABLED );
 #endif
 
 #if defined(MBEDTLS_DHM_C)
-    if( opt.dhmlen != DHMLEN )
+    if( opt.dhmlen != Constants::DHMLEN )
         mbedtls_ssl_conf_dhm_min_bitlen( &conf, opt.dhmlen );
 #endif
 
@@ -256,7 +258,7 @@ void SslClient::SetupStuff(Options opt, const char** alpn_list, unsigned char* p
         if( ( ret = mbedtls_ssl_conf_alpn_protocols( &conf, alpn_list ) ) != 0 )
         {
             mbedtls_printf( " failed\n  ! mbedtls_ssl_conf_alpn_protocols returned %d\n\n", ret );
-            throw 1;
+            throw MbedException("mbedtls_ssl_conf_alpn_protocols returned ", ret );
         }
 #endif
 
@@ -269,15 +271,15 @@ void SslClient::SetupStuff(Options opt, const char** alpn_list, unsigned char* p
     mbedtls_ssl_conf_session_tickets( &conf, opt.tickets );
 #endif
 
-    if( opt.force_ciphersuite[0] != FORCE_CIPHER )
+    if( opt.force_ciphersuite[0] != Constants::FORCE_CIPHER )
         mbedtls_ssl_conf_ciphersuites( &conf, opt.force_ciphersuite );
 
 #if defined(MBEDTLS_ARC4_C)
-    if( opt.arc4 != ARC4 )
+    if( opt.arc4 != Constants::ARC4 )
         mbedtls_ssl_conf_arc4_support( &conf, opt.arc4 );
 #endif
 
-    if( opt.allow_legacy != ALLOW_LEGACY )
+    if( opt.allow_legacy != Constants::ALLOW_LEGACY )
         mbedtls_ssl_conf_legacy_renegotiation( &conf, opt.allow_legacy );
 #if defined(MBEDTLS_SSL_RENEGOTIATION)
     mbedtls_ssl_conf_renegotiation( &conf, opt.renegotiation );
@@ -295,7 +297,7 @@ void SslClient::SetupStuff(Options opt, const char** alpn_list, unsigned char* p
         if( ( ret = mbedtls_ssl_conf_own_cert( &conf, &clicert, &pkey ) ) != 0 )
         {
             mbedtls_printf( " failed\n  ! mbedtls_ssl_conf_own_cert returned %d\n\n", ret );
-            throw 1;
+            throw MbedException("mbedtls_ssl_conf_own_cert returned ", ret);
         }
     }
 #endif
@@ -306,44 +308,44 @@ void SslClient::SetupStuff(Options opt, const char** alpn_list, unsigned char* p
                              strlen( opt.psk_identity ) ) ) != 0 )
     {
         mbedtls_printf( " failed\n  ! mbedtls_ssl_conf_psk returned %d\n\n", ret );
-        throw 1;
+        throw MbedException("mbedtls_ssl_conf_psk returned ", ret);
     }
 #endif
 
-    if( opt.min_version != MIN_VERSION )
+    if( opt.min_version != Constants::MIN_VERSION )
         mbedtls_ssl_conf_min_version( &conf, MBEDTLS_SSL_MAJOR_VERSION_3, opt.min_version );
 
-    if( opt.max_version != MAX_VERSION )
+    if( opt.max_version != Constants::MAX_VERSION )
         mbedtls_ssl_conf_max_version( &conf, MBEDTLS_SSL_MAJOR_VERSION_3, opt.max_version );
 
 #if defined(MBEDTLS_SSL_FALLBACK_SCSV)
-    if( opt.fallback != FALLBACK )
+    if( opt.fallback != Constants::FALLBACK )
         mbedtls_ssl_conf_fallback( &conf, opt.fallback );
 #endif
 
     if( ( ret = mbedtls_ssl_setup( &ssl, &conf ) ) != 0 )
     {
         mbedtls_printf( " failed\n  ! mbedtls_ssl_setup returned -0x%x\n\n", -ret );
-        throw 1;
+        throw MbedException("mbedtls_ssl_setup returned -0x", -ret);
     }
 
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
     if( ( ret = mbedtls_ssl_set_hostname( &ssl, opt.server_name ) ) != 0 )
     {
         mbedtls_printf( " failed\n  ! mbedtls_ssl_set_hostname returned %d\n\n", ret );
-        throw 1;
+        throw MbedException("mbedtls_ssl_set_hostname returned ", ret);
     }
 #endif
 
 #if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
-    if( opt.ecjpake_pw != ECJPAKE_PW )
+    if( opt.ecjpake_pw != Constants::ECJPAKE_PW )
     {
         if( ( ret = mbedtls_ssl_set_hs_ecjpake_password( &ssl,
                         (const unsigned char *) opt.ecjpake_pw,
                                         strlen( opt.ecjpake_pw ) ) ) != 0 )
         {
             mbedtls_printf( " failed\n  ! mbedtls_ssl_set_hs_ecjpake_password returned %d\n\n", ret );
-            throw 1;
+            throw MbedException("mbedtls_ssl_set_hs_ecjpake_password returned ", ret);
         }
     }
 #endif
@@ -384,7 +386,7 @@ void SslClient::PerformHandshake(Options opt)
                     "    Alternatively, you may want to use "
                         "auth_mode=optional for testing purposes.\n" );
             mbedtls_printf( "\n" );
-            throw 1;
+            throw MbedException("mbedtls_ssl_handshake returned -0x", -ret);
         }
     }
 
@@ -418,7 +420,7 @@ void SslClient::PerformHandshake(Options opt)
         if( ( ret = mbedtls_ssl_get_session( &ssl, &saved_session ) ) != 0 )
         {
             mbedtls_printf( " failed\n  ! mbedtls_ssl_get_session returned -0x%x\n\n", -ret );
-            throw 1;
+            throw MbedException("mbedtls_ssl_get_session returned -0x", -ret);
         }
 
         mbedtls_printf( " ok\n" );
@@ -470,7 +472,7 @@ void SslClient::VerifyServerCert(Options opt)
                 ret != MBEDTLS_ERR_SSL_WANT_WRITE )
             {
                 mbedtls_printf( " failed\n  ! mbedtls_ssl_renegotiate returned %d\n\n", ret );
-                throw 1;
+                throw MbedException("mbedtls_ssl_renegotiate returned ", ret);
             }
         }
         mbedtls_printf( " ok\n" );
@@ -483,10 +485,11 @@ void SslClient::SendGet(Options opt)
 	 /*
      * 6. Write the GET request
      */
- 	int ret = 0, len, tail_len, i, written, frags;
-
+  int ret = 0, len, tail_len, written, frags;
+  const char* GET_REQUEST = "GET %s HTTP/1.0\r\nExtra-header: ";
+  const char* GET_REQUEST_END = "\r\n\r\n";
     retry_left = opt.max_resend;
-send_request:
+
     mbedtls_printf( "  > Write to server:" );
     fflush( stdout );
 
@@ -495,7 +498,7 @@ send_request:
     tail_len = (int) strlen( GET_REQUEST_END );
 
     /* Add padding to GET request to reach opt.request_size in length */
-    if( opt.request_size != REQUEST_SIZE &&
+    if( opt.request_size != Constants::REQUEST_SIZE &&
         len + tail_len < opt.request_size )
     {
         memset( buf + len, 'A', opt.request_size - len - tail_len );
@@ -506,7 +509,7 @@ send_request:
     len += tail_len;
 
     /* Truncate if request size is smaller than the "natural" size */
-    if( opt.request_size != REQUEST_SIZE &&
+    if( opt.request_size != Constants::REQUEST_SIZE &&
         len > opt.request_size )
     {
         len = opt.request_size;
@@ -527,7 +530,7 @@ send_request:
                     ret != MBEDTLS_ERR_SSL_WANT_WRITE )
                 {
                     mbedtls_printf( " failed\n  ! mbedtls_ssl_write returned -0x%x\n\n", -ret );
-                    throw 1;
+                    throw MbedException("mbedtls_ssl_write returned -0x", -ret );
                 }
             }
         }
@@ -541,7 +544,7 @@ send_request:
         if( ret < 0 )
         {
             mbedtls_printf( " failed\n  ! mbedtls_ssl_write returned %d\n\n", ret );
-            throw 1;
+            throw MbedException("mbedtls_ssl_write returned ", ret );
         }
 
         frags = 1;
@@ -557,7 +560,6 @@ void SslClient::ReadResponse(Options opt)
 	/*
      * 7. Read the HTTP response
      */
-    int len = 0;
     mbedtls_printf( "  < Read from server:" );
     fflush( stdout );
 
@@ -566,11 +568,23 @@ void SslClient::ReadResponse(Options opt)
      */
     if( opt.transport == MBEDTLS_SSL_TRANSPORT_STREAM )
     {
-        do
+      IntReadResponseFromStream(this, opt);
+    }
+    else /* Not stream, so datagram */
+    {
+      IntReadResponseFromDatagram(this, opt);
+    }
+}
+
+void IntReadResponseFromStream(SslClient* cl, Options opt)
+{
+  int ret = 0;
+  int len = 0;
+    do
         {
-            len = sizeof( buf ) - 1;
-            memset( buf, 0, sizeof( buf ) );
-            ret = mbedtls_ssl_read( &ssl, buf, len );
+            len = sizeof( cl->buf ) - 1;
+            memset( cl->buf, 0, sizeof( cl->buf ) );
+            ret = mbedtls_ssl_read( &(cl->ssl), cl->buf, len );
 
             if( ret == MBEDTLS_ERR_SSL_WANT_READ ||
                 ret == MBEDTLS_ERR_SSL_WANT_WRITE )
@@ -583,70 +597,70 @@ void SslClient::ReadResponse(Options opt)
                     case MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY:
                         mbedtls_printf( " connection was closed gracefully\n" );
                         ret = 0;
-                        this->CloseConnection();
+                        cl->CloseConnection();
 
                     case 0:
                     case MBEDTLS_ERR_NET_CONN_RESET:
                         mbedtls_printf( " connection was reset by peer\n" );
                         ret = 0;
-                        this->Reconnect(opt);
+                        cl->Reconnect(opt);
 
                     default:
                         mbedtls_printf( " mbedtls_ssl_read returned -0x%x\n", -ret );
-                        throw 1;
+                        throw MbedException(" mbedtls_ssl_read returned -0x%x\n", -ret );
                 }
             }
 
             len = ret;
-            buf[len] = '\0';
-            mbedtls_printf( " %d bytes read\n\n%s", len, (char *) buf );
+            cl->buf[len] = '\0';
+            mbedtls_printf( " %d bytes read\n\n%s", len, (char *) cl->buf );
 
             /* End of message should be detected according to the syntax of the
              * application protocol (eg HTTP), just use a dummy test here. */
-            if( ret > 0 && buf[len-1] == '\n' )
+            if( ret > 0 && cl->buf[len-1] == '\n' )
             {
                 ret = 0;
                 break;
             }
         }
         while( 1 );
-    }
-    else /* Not stream, so datagram */
+}
+
+void IntReadResponseFromDatagram(SslClient* cl, Options opt)
+{
+  int ret = 0;
+  int len = sizeof( cl->buf ) - 1;
+  memset( cl->buf, 0, sizeof( cl->buf ) );
+  
+  do ret = mbedtls_ssl_read( &(cl->ssl), cl->buf, len );
+  while( ret == MBEDTLS_ERR_SSL_WANT_READ ||
+	 ret == MBEDTLS_ERR_SSL_WANT_WRITE );
+  
+  if( ret <= 0 )
     {
-        len = sizeof( buf ) - 1;
-        memset( buf, 0, sizeof( buf ) );
-
-        do ret = mbedtls_ssl_read( &ssl, buf, len );
-        while( ret == MBEDTLS_ERR_SSL_WANT_READ ||
-               ret == MBEDTLS_ERR_SSL_WANT_WRITE );
-
-        if( ret <= 0 )
-        {
-            switch( ret )
-            {
-                case MBEDTLS_ERR_SSL_TIMEOUT:
-                    mbedtls_printf( " timeout\n" );
-                    if( retry_left-- > 0 )
-                        this->SendGet(opt);
-                    throw 1;
-
-                case MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY:
-                    mbedtls_printf( " connection was closed gracefully\n" );
-                    ret = 0;
-                    this->CloseConnection();
-
-                default:
-                    mbedtls_printf( " mbedtls_ssl_read returned -0x%x\n", -ret );
-                    throw 1;
-            }
-        }
-
-        len = ret;
-        buf[len] = '\0';
-        mbedtls_printf( " %d bytes read\n\n%s", len, (char *) buf );
-        ret = 0;
+      switch( ret )
+	{
+	case MBEDTLS_ERR_SSL_TIMEOUT:
+	  mbedtls_printf( " timeout\n" );
+	  if( cl->retry_left-- > 0 )
+	    cl->SendGet(opt);
+	  throw MbedException("timeout", 0);
+	  
+	case MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY:
+	  mbedtls_printf( " connection was closed gracefully\n" );
+	  ret = 0;
+	  cl->CloseConnection();
+	  
+	default:
+	  mbedtls_printf( " mbedtls_ssl_read returned -0x%x\n", -ret );
+	  throw MbedException(" mbedtls_ssl_read returned -0x", -ret);
+	}
     }
-
+  
+  len = ret;
+  cl->buf[len] = '\0';
+  mbedtls_printf( " %d bytes read\n\n%s", len, (char *) cl->buf );
+  ret = 0;
 }
 
 void SslClient::ReuseConnection(Options opt)
@@ -664,7 +678,7 @@ void SslClient::ReuseConnection(Options opt)
         if( ( ret = mbedtls_ssl_session_reset( &ssl ) ) != 0 )
         {
             mbedtls_printf( " failed\n  ! mbedtls_ssl_session_reset returned -0x%x\n\n", -ret );
-            throw 1;
+            throw MbedException("mbedtls_ssl_session_reset returned -0x", -ret);
         }
 
         while( ( ret = mbedtls_ssl_handshake( &ssl ) ) != 0 )
@@ -673,7 +687,7 @@ void SslClient::ReuseConnection(Options opt)
                 ret != MBEDTLS_ERR_SSL_WANT_WRITE )
             {
                 mbedtls_printf( " failed\n  ! mbedtls_ssl_handshake returned -0x%x\n\n", -ret );
-                throw 1;
+                throw MbedException("mbedtls_ssl_handshake returned -0x", -ret);
             }
         }
 
@@ -712,7 +726,6 @@ void SslClient::Reconnect(Options opt)
     /*
      * 9. Reconnect?
      */
-reconnect:
     if( opt.reconnect != 0 )
     {
         --opt.reconnect;
@@ -729,13 +742,13 @@ reconnect:
         if( ( ret = mbedtls_ssl_session_reset( &ssl ) ) != 0 )
         {
             mbedtls_printf( " failed\n  ! mbedtls_ssl_session_reset returned -0x%x\n\n", -ret );
-            throw 1;
+            throw MbedException("mbedtls_ssl_session_reset returned -0x", -ret );
         }
 
         if( ( ret = mbedtls_ssl_set_session( &ssl, &saved_session ) ) != 0 )
         {
             mbedtls_printf( " failed\n  ! mbedtls_ssl_conf_session returned %d\n\n", ret );
-            throw 1;
+            throw MbedException("mbedtls_ssl_conf_session returned ", ret );
         }
 
         if( ( ret = mbedtls_net_connect( &server_fd, opt.server_addr, opt.server_port,
@@ -743,7 +756,7 @@ reconnect:
                                  MBEDTLS_NET_PROTO_TCP : MBEDTLS_NET_PROTO_UDP ) ) != 0 )
         {
             mbedtls_printf( " failed\n  ! mbedtls_net_connect returned -0x%x\n\n", -ret );
-            throw 1;
+            throw MbedException("mbedtls_net_connect returned -0x", -ret );
         }
 
         if( opt.nbio > 0 )
@@ -754,7 +767,7 @@ reconnect:
         {
             mbedtls_printf( " failed\n  ! net_set_(non)block() returned -0x%x\n\n",
                     -ret );
-            throw 1;
+            throw MbedException("net_set_(non)block() returned -0x%x\n\n", -ret);
         }
 
         while( ( ret = mbedtls_ssl_handshake( &ssl ) ) != 0 )
@@ -763,7 +776,7 @@ reconnect:
                 ret != MBEDTLS_ERR_SSL_WANT_WRITE )
             {
                 mbedtls_printf( " failed\n  ! mbedtls_ssl_handshake returned -0x%x\n\n", -ret );
-                throw 1;
+                throw MbedException(" mbedtls_ssl_handshake returned -0x%x\n\n", -ret );
             }
         }
 
@@ -778,7 +791,6 @@ SslClient::~SslClient()
     /*
      * Cleanup and exit
      */
-exit:
 #ifdef MBEDTLS_ERROR_C
     if( ret != 0 )
     {

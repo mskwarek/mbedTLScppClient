@@ -1,0 +1,70 @@
+std::vector<std::string> RsaTestCases = {
+  "TLS-RSA-WITH-AES-128-CBC-SHA256",
+  "TLS-RSA-WITH-AES-256-CBC-SHA256",
+  "TLS-RSA-WITH-AES-128-GCM-SHA256",
+  "TLS-RSA-WITH-AES-256-GCM-SHA384",
+  "TLS-RSA-WITH-AES-128-CCM",
+  "TLS-RSA-WITH-AES-256-CCM",
+  "TLS-RSA-WITH-AES-128-CCM-8",
+  "TLS-RSA-WITH-AES-256-CCM-8",
+  "TLS-RSA-WITH-NULL-SHA256"
+};
+
+std::vector<std::string> DheRsaTestCases = 
+{
+  "TLS-DHE-RSA-WITH-AES-128-CBC-SHA256",
+  "TLS-DHE-RSA-WITH-AES-256-CBC-SHA256",
+  "TLS-DHE-RSA-WITH-AES-128-GCM-SHA256",
+  "TLS-DHE-RSA-WITH-AES-256-GCM-SHA384"/*,
+  "TLS-DHE-RSA-WITH-AES-128-CCM",
+  "TLS-DHE-RSA-WITH-AES-256-CCM",
+  "TLS-DHE-RSA-WITH-AES-128-CCM-8",
+  "TLS-DHE-RSA-WITH-AES-256-CCM-8"*/
+};
+
+std::vector<std::string> EcdheRsaTestCases =
+{
+  "TLS-ECDHE-RSA-WITH-AES-128-CBC-SHA256",
+  "TLS-ECDHE-RSA-WITH-AES-256-CBC-SHA384",
+  "TLS-ECDHE-RSA-WITH-AES-128-GCM-SHA256",
+  "TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384"/*,
+  "TLS-ECDHE-RSA-WITH-CAMELLIA-128-CBC-SHA256",
+  "TLS-ECDHE-RSA-WITH-CAMELLIA-256-CBC-SHA384"*/ 
+};
+
+std::vector<std::string> EcdhRsaTestCases =
+{
+};
+
+std::vector<std::string> EcdheEcdsaTestCases =
+{
+  "TLS-ECDHE-ECDSA-WITH-AES-128-CBC-SHA256",
+  "TLS-ECDHE-ECDSA-WITH-AES-256-CBC-SHA384",
+  "TLS-ECDHE-ECDSA-WITH-AES-128-GCM-SHA256",
+  "TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384"/*,
+  "TLS-ECDHE-ECDSA-WITH-AES-128-CCM",
+  "TLS-ECDHE-ECDSA-WITH-AES-256-CCM",
+  "TLS-ECDHE-ECDSA-WITH-AES-128-CCM-8",
+  "TLS-ECDHE-ECDSA-WITH-AES-256-CCM-8",
+  "TLS-ECDHE-ECDSA-WITH-CAMELLIA-128-CBC-SHA256",
+  "TLS-ECDHE-ECDSA-WITH-CAMELLIA-256-CBC-SHA384"*/
+};
+/*
+std::vector<char*> EcdhEcdsaTestCases =
+{
+   
+};
+
+std::vector<char*> PskTestCases =
+  {
+  };
+
+std::vector<char*> DhePskTestCases =
+  {
+  };
+
+  std::vector<char*> EcdhePskTestCases =
+    {
+    };
+    std::vector<char*> 
+*/

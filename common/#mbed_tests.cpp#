@@ -18,8 +18,8 @@ int main( void )
 }
 #else
 
-#include "common/Usage.c"
-#include "common/SslClient.h"
+#include "Usage.c"
+#include "SslClient.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -80,8 +80,8 @@ try{
     cl.Reconnect(opt);
 }
 
- catch(MbedException e){
-   e.what();
+catch(...){
+    std::cout<<"Exit\n\n";
 }
 
   

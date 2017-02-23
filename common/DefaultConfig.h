@@ -17,54 +17,41 @@
 #include "mbedtls/platform.h"
 #else
 #include <stdio.h>
-#define mbedtls_printf     printf
-#define mbedtls_fprintf    fprintf
-#define mbedtls_snprintf   snprintf
+#define mbedtls_printf printf
+#define mbedtls_fprintf fprintf
+#define mbedtls_snprintf snprintf
 #endif
 
-static const char* SERVER_NAME = 	"localhost";
-static const char* SERVER_ADDR = NULL;
-static const char* SERVER_PORT = "4433";
-static const char* REQUEST_PAGE = "/";
-static const int REQUEST_SIZE = -1;
-static const int DEBUG_LEVEL = 0;
-static const int NBIO = 0;
-static const int READ_TIMEOUT = 0;
-static const int MAX_RESEND = 0;
-static const char* CA_FILE = "";
-static const char* CA_PATH = "";
-static const char* CRT_FILE = "";
-static const char* KEY_FILE = "";
-static const char* PSK = "";
-static const char* PSK_IDENTITY = "Client_identity";
-static const char* ECJPAKE_PW = NULL;
-static const int FORCE_CIPHER =  0;
-static const int RENEGOTIATION = MBEDTLS_SSL_RENEGOTIATION_DISABLED;
-static const int ALLOW_LEGACY =  -2;
-static const int RENEGOTIATE =   0;
-static const int EXCHANGES =     1;
-static const int MIN_VERSION =   -1;
-static const int MAX_VERSION =   -1;
-static const int ARC4 =    -1;
-static const int AUTH_MODE =     -1;
-static const int MFL_CODE = MBEDTLS_SSL_MAX_FRAG_LEN_NONE;
-static const int TRUNC_HMAC =    -1;
-static const int RECSPLIT =-1;
-static const int DHMLEN =  -1;
-static const int RECONNECT =     0;
-static const int RECO_DELAY =    0;
-static const int RECONNECT_HARD =0;
-static const int TICKETS = MBEDTLS_SSL_SESSION_TICKETS_ENABLED;
-static const char* ALPN_STRING =   NULL;
-static const int TRANSPORT =     MBEDTLS_SSL_TRANSPORT_STREAM;
-static const int HS_TO_MIN =     0;
-static const int HS_TO_MAX =     0;
-static const int FALLBACK =-1;
-static const int EXTENDED_MS =   -1;
-static const int ETM =     -1;
-static const char* GET_REQUEST = "GET %s HTTP/1.0\r\nExtra-header: ";
-static const char* GET_REQUEST_END = "\r\n\r\n";
-
+namespace Constants{
+  static const int REQUEST_SIZE = -1;
+  static const int DEBUG_LEVEL = 0;
+  static const int NBIO = 0;
+  static const int READ_TIMEOUT = 0;
+  static const int MAX_RESEND = 0;
+  static const int FORCE_CIPHER =  0;
+  static const int RENEGOTIATION = MBEDTLS_SSL_RENEGOTIATION_DISABLED;
+  static const int ALLOW_LEGACY =  -2;
+  static const int RENEGOTIATE =   0;
+  static const int EXCHANGES =     1;
+  static const int MIN_VERSION =   -1;
+  static const int MAX_VERSION =   -1;
+  static const int ARC4 =    -1;
+  static const int AUTH_MODE =     -1;
+  static const int MFL_CODE = MBEDTLS_SSL_MAX_FRAG_LEN_NONE;
+  static const int TRUNC_HMAC =    -1;
+  static const int RECSPLIT =-1;
+  static const int DHMLEN =  -1;
+  static const int RECONNECT =     0;
+  static const int RECO_DELAY =    0;
+  static const int RECONNECT_HARD =0;
+  static const int TICKETS = MBEDTLS_SSL_SESSION_TICKETS_ENABLED;
+  static const int TRANSPORT =     MBEDTLS_SSL_TRANSPORT_STREAM;
+  static const int HS_TO_MIN =     0;
+  static const int HS_TO_MAX =     0;
+  static const int FALLBACK =-1;
+  static const int EXTENDED_MS =   -1;
+  static const int ETM =     -1;
+}
 
 class Options
 {

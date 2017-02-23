@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<tests>
+  <ciphersuite_set>
+    <ciphersuite>"TLS-RSA-WITH-AES-128-CBC-SHA256"</ciphersuite>
+    <ciphersuite>"TLS-RSA-WITH-AES-256-CBC-SHA256"</ciphersuite>
+    <ciphersuite>"TLS-RSA-WITH-AES-128-GCM-SHA256"</ciphersuite>
+    <ciphersuite>"TLS-RSA-WITH-AES-256-GCM-SHA384"</ciphersuite>
+    <ciphersuite>"TLS-RSA-WITH-AES-128-CCM"</ciphersuite>
+    <ciphersuite>"TLS-RSA-WITH-AES-256-CCM"</ciphersuite>
+    <ciphersuite>"TLS-RSA-WITH-AES-128-CCM-8"</ciphersuite>
+    <ciphersuite>"TLS-RSA-WITH-AES-256-CCM-8"</ciphersuite>
+    <ciphersuite>"TLS-RSA-WITH-NULL-SHA256"</ciphersuite>
+  </ciphersuite_set>
+  <ciphersuite_set>
+    <ciphersuite>"TLS-DHE-RSA-WITH-AES-128-CBC-SHA256"</ciphersuite>
+    <ciphersuite>"TLS-DHE-RSA-WITH-AES-256-CBC-SHA256"</ciphersuite>
+    <ciphersuite>"TLS-DHE-RSA-WITH-AES-128-GCM-SHA256"</ciphersuite>
+    <ciphersuite>"TLS-DHE-RSA-WITH-AES-256-GCM-SHA384"</ciphersuite>
+    <ciphersuite>"TLS-DHE-RSA-WITH-AES-128-CCM"</ciphersuite>
+    <ciphersuite>"TLS-DHE-RSA-WITH-AES-256-CCM"</ciphersuite>
+    <ciphersuite>"TLS-DHE-RSA-WITH-AES-128-CCM-8"</ciphersuite>
+    <ciphersuite>"TLS-DHE-RSA-WITH-AES-256-CCM-8"</ciphersuite>
+  </ciphersuite_set>
+  <ciphersuite_set>
+    <ciphersuite>"TLS-ECDHE-RSA-WITH-AES-128-CBC-SHA256"</ciphersuite>
+    <ciphersuite>"TLS-ECDHE-RSA-WITH-AES-256-CBC-SHA384"</ciphersuite>
+    <ciphersuite>"TLS-ECDHE-RSA-WITH-AES-128-GCM-SHA256"</ciphersuite>
+    <ciphersuite>"TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384"</ciphersuite>
+    <ciphersuite>"TLS-ECDHE-RSA-WITH-CAMELLIA-128-CBC-SHA256"</ciphersuite>
+    <ciphersuite>"TLS-ECDHE-RSA-WITH-CAMELLIA-256-CBC-SHA384"</ciphersuite>
+  </ciphersuite_set>
+  <ciphersuite_set>
+    <ciphersuite>"TLS-ECDHE-ECDSA-WITH-AES-128-CBC-SHA256"</ciphersuite>
+    <ciphersuite>"TLS-ECDHE-ECDSA-WITH-AES-256-CBC-SHA384"</ciphersuite>
+    <ciphersuite>"TLS-ECDHE-ECDSA-WITH-AES-128-GCM-SHA256"</ciphersuite>
+    <ciphersuite>"TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384"</ciphersuite>
+    <ciphersuite>"TLS-ECDHE-ECDSA-WITH-AES-128-CCM"</ciphersuite>
+    <ciphersuite>"TLS-ECDHE-ECDSA-WITH-AES-256-CCM"</ciphersuite>
+    <ciphersuite>"TLS-ECDHE-ECDSA-WITH-AES-128-CCM-8"</ciphersuite>
+    <ciphersuite>"TLS-ECDHE-ECDSA-WITH-AES-256-CCM-8"</ciphersuite>
+    <ciphersuite>"TLS-ECDHE-ECDSA-WITH-CAMELLIA-128-CBC-SHA256"</ciphersuite>
+    <ciphersuite>"TLS-ECDHE-ECDSA-WITH-CAMELLIA-256-CBC-SHA384"</ciphersuite>
+  </ciphersuite_set>
+</tests>

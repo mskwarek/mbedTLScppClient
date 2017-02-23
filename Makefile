@@ -3,10 +3,9 @@
 # To compile with PKCS11: add "-lpkcs11-helper" to LDFLAGS
 
 CC = g++
-CFLAGS	?= -O2
+CFLAGS	?= -O2 -std=c++11
 WARNING_CFLAGS ?= -Wall -g -pthread
-LDFLAGS = -lpthread 
-# -lgtest_main -lgtest 
+LDFLAGS = -lpthread -lgtest_main -lgtest 
 
 LOCAL_CFLAGS = $(WARNING_CFLAGS) -I../mbedtls/include -D_FILE_OFFSET_BITS=64
 LOCAL_LDFLAGS = -L../mbedtls/library/\
@@ -57,15 +56,21 @@ all: $(APPS)
 
 $(DEP):
 	$(MAKE) -C ../mbedtls/library
-mkoi_mbed_test$(EXEXT): *.cpp  $(DEP)
+mkoi_mbed_test$(EXEXT): mbed_tests.cpp  $(DEP)
 	echo "  C++    mbed_tests.cpp"
-	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) *.cpp *.c $(LOCAL_LDFLAGS) -o $@ $(LDFLAGS)
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) mbed_tests.cpp  common/*.cpp common/*.c $(LOCAL_LDFLAGS) -o $@ $(LDFLAGS)
+
+test: cpp_client_ciphersuites_tests$(EXEXT)
+	$(MAKE) -C ../mbedtls/library
+cpp_client_ciphersuites_tests$(EXEXT): mbed_cpp_client_ciphersuites_tests.cpp $(DEP)
+	echo "  C++ mbed_cpp_client_ciphersuites_test.cpp"
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) mbed_cpp_client_ciphersuites_tests.cpp common/*.cpp common/*.c $(LOCAL_LDFLAGS) -o $@ $(LDFLAGS)
 
 clean:
 ifndef WINDOWS
-	rm -f $(APPS)
+	rm -f $(APPS) common/$(APPS) cpp_client_ciphersuites_tests$(EXEXT) common/cpp_client_ciphersuites_tests$(EXEXT) common/*.o 
 else
-	del /S /Q /F *.o *.exe
+	del /S /Q /F *.o *.exe common/*.o 
 endif
 
 list:
